@@ -1,9 +1,9 @@
-from fastapi.testclient import TestClient
 from unittest.mock import patch
-
 from app.main import app
 
-client = TestClient(app)
+# Configuración del cliente de pruebas de Flask
+app.config['TESTING'] = True
+client = app.test_client()
 
 CLAVE_API = "sk-atlas-123"
 ENCABEZADOS = {"apiKey": CLAVE_API}
@@ -12,7 +12,7 @@ ENCABEZADOS = {"apiKey": CLAVE_API}
 def test_revisar_salud():
     respuesta = client.get("/salud")
     assert respuesta.status_code == 200
-    assert respuesta.json() == {"estado": "ok"}
+    assert respuesta.get_json() == {"estado": "ok"}
 
 
 def test_clasificar_sin_autorizacion():
@@ -23,14 +23,14 @@ def test_clasificar_sin_autorizacion():
 def test_clasificar_clave_incorrecta():
     respuesta = client.post(
         "/clasificar",
-        headers={"X-API-Key": "clave-falsa"},
+        headers={"apiKey": "clave-falsa"},
         json={"texto": "I can't login"},
     )
     assert respuesta.status_code == 403
 
 
 def test_clasificar_texto_vacio():
-    """Pydantic debería rechazar una petición con campo de texto faltante."""
+    """Flask debería devolver 422 si falta el campo 'texto' según nuestra lógica en app/main.py."""
     respuesta = client.post("/clasificar", headers=ENCABEZADOS, json={})
     assert respuesta.status_code == 422
 
@@ -45,7 +45,7 @@ def test_clasificar_ticket(mock_clasificador):
         json={"texto": "I was charged twice for my subscription"},
     )
     assert respuesta.status_code == 200
-    datos = respuesta.json()
+    datos = respuesta.get_json()
     assert datos["tema"] == "Facturacion"
     assert 0.0 <= datos["confianza"] <= 1.0
 
@@ -61,7 +61,7 @@ def test_clasificar_esquema_respuesta(mock_clasificador):
         json={"texto": "How do I get started with your product?"},
     )
     assert respuesta.status_code == 200
-    datos = respuesta.json()
+    datos = respuesta.get_json()
     assert "tema" in datos
     assert "confianza" in datos
     assert isinstance(datos["tema"], str)

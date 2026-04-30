@@ -1,9 +1,9 @@
-from fastapi.testclient import TestClient
 from unittest.mock import patch
 from app.main import app
 
-
-client = TestClient(app)
+# Configuración del cliente de pruebas de Flask
+app.config['TESTING'] = True
+client = app.test_client()
 
 CLAVE_API = "sk-atlas-123"
 ENCABEZADOS = {"apiKey": CLAVE_API}
@@ -22,7 +22,7 @@ def test_clasificar_con_instruccion_personalizada(mock_clasificador):
 
     assert respuesta.status_code == 200
     mock_clasificador.clasificar.assert_called_once_with(
-        "Hola, tengo un problema con mi pago",
+        texto="Hola, tengo un problema con mi pago",
         instruccion="Custom instruction: ",
         ejemplos=None
     )
@@ -46,7 +46,7 @@ def test_clasificar_con_ejemplos_personalizados(mock_clasificador):
 
     assert respuesta.status_code == 200
     mock_clasificador.clasificar.assert_called_once_with(
-        "necesito ayuda",
+        texto="necesito ayuda",
         instruccion=None,
         ejemplos=ejemplos
     )
@@ -69,7 +69,7 @@ def test_clasificar_con_ambos_parametros(mock_clasificador):
 
     assert respuesta.status_code == 200
     mock_clasificador.clasificar.assert_called_once_with(
-        "hay un incendio",
+        texto="hay un incendio",
         instruccion=instruccion,
         ejemplos=ejemplos
     )

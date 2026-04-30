@@ -1,16 +1,19 @@
 # Atlas — API Clasificadora de Tickets de Soporte
 
-Atlas es una API eficiente y segura construida con FastAPI que clasifica textos de tickets de soporte en diferentes temas utilizando el modelo de embeddings [`microsoft/harrier-oss-v1-270m`](https://huggingface.co/microsoft/harrier-oss-v1-270m).
+> [!NOTE]
+> **Migración de Arquitectura:** Atlas ha sido migrado de FastAPI + PyTorch a **Flask + CrispEmbed**. Este cambio se realizó para facilitar el despliegue en entornos de producción (como PythonAnywhere), eliminando dependencias pesadas y reduciendo el consumo de recursos sin perder precisión.
+
+Atlas es una API ultra-ligera y eficiente construida con **Flask** y **CrispEmbed** que clasifica textos de tickets de soporte en diferentes temas. Utiliza un binario de C++ (CrispEmbed) para manejar modelos de embeddings en formato GGUF, lo que reduce drásticamente el consumo de memoria y elimina la dependencia de PyTorch (~2GB).
 
 ## Cómo Funciona
 
-Harrier es un **modelo de embeddings de texto**, no un generador de texto. Atlas lo utiliza para **clasificación zero-shot mediante similitud de embeddings**:
+Atlas utiliza **clasificación zero-shot mediante similitud de embeddings** aprovechando el modelo `harrier-270m-q8_0.gguf`:
 
-1. **Al iniciar**, el modelo precalcula los embeddings de referencia para un conjunto de descripciones representativas por tema (ej. *"Problema con el pago de factura"* → Billing).
+1. **Al iniciar**, el modelo carga los pesos desde un archivo `.gguf` local y precalcula los embeddings de referencia para un conjunto de descripciones representativas por tema.
 2. **En cada solicitud**, el texto del ticket entrante se codifica en un embedding usando un prompt de instrucción (`Instruct: Retrieve the support ticket category that best matches this message\nQuery: <text>`).
-3. Se calcula la **similitud del coseno** entre el embedding del ticket y cada embedding de referencia. El tema con la mayor similitud gana.
+3. Se calcula la **similitud del coseno** (producto punto sobre vectores normalizados) entre el embedding del ticket y cada embedding de referencia. El tema con la mayor similitud gana.
 
-Este enfoque es rápido (un solo pase hacia adelante por solicitud), preciso y no requiere de un entrenamiento adicional (fine-tuning).
+Este enfoque es extremadamente rápido y consume muy poca RAM, siendo ideal para despliegues en entornos limitados como **PythonAnywhere**.
 
 ### Temas Soportados
 
@@ -24,17 +27,28 @@ Este enfoque es rápido (un solo pase hacia adelante por solicitud), preciso y n
 
 ## Configuración
 
-```bash
-pip install -r requirements.txt
-```
+1. Instala las dependencias:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Asegúrate de tener el archivo del modelo GGUF en la carpeta `crispembed/` (ej. `weights_q8_0.gguf`).
 
 ## Ejecutar la API
 
+Desde la raíz del proyecto, puedes usar cualquiera de estos comandos:
+
+**Opción 1: Python directo**
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+python app/main.py
 ```
 
-En la primera ejecución, los pesos del modelo (~540 MB) se descargarán automáticamente desde Hugging Face.
+**Opción 2: Flask CLI**
+```bash
+flask --app app/main.py run --port 8000
+```
+
+La API se ejecutará por defecto en `http://0.0.0.0:8000`.
 
 ## Uso
 
@@ -50,9 +64,6 @@ Requiere el encabezado `apiKey`. Clave predeterminada: `sk-atlas-123`.
 | `instruccion` | `string` | No | Una instrucción personalizada que reemplaza el prefijo predeterminado del modelo. |
 | `ejemplos` | `dict` | No | Un diccionario de temas y sus ejemplos (`{"Tema": ["ejemplo1", "ejemplo2"]}`) que reemplaza los temas por defecto. |
 
-> [!IMPORTANT]
-> Si se proporcionan `ejemplos` personalizados, la clasificación se realizará **únicamente** contra esos ejemplos, ignorando los temas predeterminados. Esto incurrirá en un pequeño retraso debido a la codificación de los nuevos ejemplos.
-
 #### Ejemplo Básico
 
 ```bash
@@ -62,44 +73,18 @@ curl -X POST "http://localhost:8000/clasificar" \
      -d '{"texto": "Mi servidor se bloquea al subir archivos grandes."}'
 ```
 
-#### Ejemplo con Parámetros Personalizados
-
-```bash
-curl -X POST "http://localhost:8000/clasificar" \
-     -H "apiKey: sk-atlas-123" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "texto": "necesito ayuda",
-       "instruccion": "Retrieve the urgency level for this message: ",
-       "ejemplos": {
-         "Urgente": ["fuego", "emergencia", "caída total"],
-         "Normal": ["pregunta", "duda", "ayuda"]
-       }
-     }'
-```
-
 **Respuesta:**
 
 ```json
 {
-  "tema": "Normal",
-  "confianza": 0.8234
+  "tema": "Problema Tecnico",
+  "confianza": 0.8942
 }
 ```
 
 ### `GET /salud`
 
-No requiere autenticación.
-
-```bash
-curl http://localhost:8000/salud
-```
-
-## Seguridad
-
-- Todos los endpoints de clasificación requieren una clave de API mediante el encabezado `apiKey`.
-- Las solicitudes sin una clave válida reciben una respuesta `403 Forbidden`.
-- La entrada de datos se valida a través de los esquemas de Pydantic; las solicitudes mal formadas devuelven `422 Unprocessable Entity`.
+No requiere autenticación. Devuelve el estado de la API.
 
 ## Pruebas (Testing)
 
@@ -109,22 +94,10 @@ curl http://localhost:8000/salud
 pytest tests/test_principal.py tests/test_parametros.py -v
 ```
 
-Estas pruebas simulan (mock) el clasificador y se ejecutan en segundos, siendo seguras para Entornos de Integración Continua (CI).
-
-### Benchmarks de Precisión (requiere el modelo)
+### Benchmarks de Precisión (requiere el modelo y CrispEmbed funcional)
 
 ```bash
 pytest tests/test_precision.py -v -s
-```
-
-Carga el modelo Harrier real y clasifica muestras de tickets conocidos comparándolos contra los temas esperados. Imprime un informe de precisión por tema y falla si la precisión general cae por debajo del 80%.
-
-Utiliza esto después de editar `app/temas.py` para medir el impacto de tus cambios en la calidad de la clasificación.
-
-### Omitir pruebas de precisión en CI
-
-```bash
-pytest -m "not accuracy"
 ```
 
 ## Linting

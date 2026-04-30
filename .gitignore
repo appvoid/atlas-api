@@ -8,3 +8,5 @@ vectores_prompt.json
 .DS_Store
 flake8.log
 notes.md
+crispembed/
+*.json

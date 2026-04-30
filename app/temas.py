@@ -9,6 +9,7 @@
 
 DESCRIPCIONES_TEMAS: dict[str, list[str]] = {
     "Facturacion": [
+        "Pagos y Dinero / Payments and Money: cobros, facturas, tarjetas, reembolsos, money",
         "Me cobraron dos veces $49.99 en el estado de cuenta de mi tarjeta de crédito Visa",
         "Por favor procesen un reembolso porque mi factura fiscal muestra un monto en "
         "dólares incorrecto",
@@ -19,6 +20,7 @@ DESCRIPCIONES_TEMAS: dict[str, list[str]] = {
         "de facturación",
     ],
     "Problema Tecnico": [
+        "Errores y Fallos / Technical Issues: bugs, exceptions, crashes, software errors",
         "La aplicación arroja una excepción fatal y se cierra inesperadamente en la pantalla "
         "de carga",
         "El uso de memoria se dispara al 100% y congela el contenedor de la base de datos",
@@ -31,14 +33,18 @@ DESCRIPCIONES_TEMAS: dict[str, list[str]] = {
         "Falta el campo customer_id en el payload del webhook desde la última actualización",
     ],
     "Acceso a Cuenta": [
+        "Login y Usuarios / Account Access: password, login, locked account, authentication",
         "No puedo autenticarme porque el correo para restablecer la contraseña no llega",
         "Mi perfil se ha bloqueado después de demasiados intentos incorrectos de PIN",
         "No estoy recibiendo el mensaje de texto SMS para la autenticación multifactor (MFA)",
         "Mi sesión expira inmediatamente después de escribir mi nombre de usuario y "
         "presionar Enter",
-        "Necesito migrar mis credenciales de inicio de sesión único (SSO) de Okta a Azure",
+        "Migración de credenciales de inicio de sesión único (SSO) de Okta a Azure",
     ],
     "Solicitud de Funcion": [
+        "Nuevas Funciones / Feature Requests: suggestions, improvements, new tools, changes",
+        "Me gustaría pedir una nueva funcionalidad o herramienta para el sistema",
+        "¿Pueden crear una nueva funciona o característica para mi blog?",
         "Envío una idea para la hoja de ruta del producto para implementar nuevas características",
         "Me gustaría sugerir el desarrollo de un tema nativo en modo oscuro para la "
         "próxima actualización",
@@ -49,6 +55,7 @@ DESCRIPCIONES_TEMAS: dict[str, list[str]] = {
         "diseños del panel de control",
     ],
     "Consulta General": [
+        "Dudas y Soporte / General Inquiry: tutorials, documentation, guides, questions",
         "¿Dónde puedo encontrar los videos tutoriales para principiantes y la "
         "documentación oficial?",
         "Necesito ayuda para comenzar con el onboarding inicial y la guía de configuración",
