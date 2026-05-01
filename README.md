@@ -7,23 +7,23 @@ Atlas es una API ultra-ligera y eficiente construida con **Flask** y **CrispEmbe
 
 ## Cómo Funciona
 
-Atlas utiliza **clasificación zero-shot mediante similitud de embeddings** aprovechando el modelo `harrier-270m-q8_0.gguf`:
+Atlas utiliza **clasificación zero-shot mediante similitud de embeddings** aprovechando el modelo `es_q8_0.gguf` (optimizado para español):
 
-1. **Al iniciar**, el modelo carga los pesos desde un archivo `.gguf` local y precalcula los embeddings de referencia para un conjunto de descripciones representativas por tema.
-2. **En cada solicitud**, el texto del ticket entrante se codifica en un embedding usando un prompt de instrucción (`Instruct: Retrieve the support ticket category that best matches this message\nQuery: <text>`).
-3. Se calcula la **similitud del coseno** (producto punto sobre vectores normalizados) entre el embedding del ticket y cada embedding de referencia. El tema con la mayor similitud gana.
+1. **Al iniciar**, el modelo carga los pesos desde un archivo `.gguf` local y precomputa los embeddings de referencia (**modo passage**) para un conjunto de anclas representativas por tema definidas en `app/temas.py`.
+2. **En cada solicitud**, el texto del ticket entrante se codifica en un embedding usando el prefijo de consulta (**modo query**): `query: <texto>`.
+3. Se calcula la **similitud del coseno** (producto punto sobre vectores normalizados) entre el embedding del ticket y cada ancla de referencia. El tema con el valor máximo de similitud es el seleccionado.
 
-Este enfoque es extremadamente rápido y consume muy poca RAM, siendo ideal para despliegues en entornos limitados como **PythonAnywhere**.
+Este enfoque es extremadamente rápido y consume muy poca RAM (aprox. 300MB), siendo ideal para despliegues en entornos limitados como **PythonAnywhere**.
 
 ### Temas Soportados
 
-| Tema (Topic) | Descripción |
+| Tema (Topic) | Descripción / Anclas de Referencia |
 |---|---|
-| Facturacion | Cargos, reembolsos, facturas, métodos de pago |
-| Problema Tecnico | Bugs, fallos, errores, caídas del sistema, fallos de API |
-| Acceso a Cuenta | Problemas de inicio de sesión, restablecimiento de contraseñas, bloqueos, permisos |
-| Solicitud de Funcion | Sugerencias, nuevas funcionalidades, mejoras |
-| Consulta General | Documentación, guías iniciales (onboarding), estados del servicio |
+| Facturacion | Pagos, cobros, reembolsos, facturas, errores bancarios y suscripciones. |
+| Problema Tecnico | Fallos de sistema, errores HTTP, bugs en la app, problemas de UI y webhooks. |
+| Acceso a Cuenta | Login, contraseñas, bloqueos de perfil, MFA/2FA y gestión de usuarios. |
+| Solicitud de Funcion | Sugerencias, nuevas herramientas, integraciones y mejoras de diseño. |
+| Consulta General | Documentación, guías, horarios, legal y dudas generales de inicio. |
 
 ## Configuración
 
@@ -32,7 +32,7 @@ Este enfoque es extremadamente rápido y consume muy poca RAM, siendo ideal para
    pip install -r requirements.txt
    ```
 
-2. Asegúrate de tener el archivo del modelo GGUF en la carpeta `crispembed/` (ej. `weights_q8_0.gguf`).
+
 
 ## Ejecutar la API
 
