@@ -19,12 +19,12 @@ except (ImportError, ModuleNotFoundError):
 # Archivo GGUF local
 MODELO_PATH = os.environ.get(
     "CRISPEMBED_MODEL",
-    os.path.join(os.path.dirname(__file__), '..', 'crispembed', 'es_q8_0.gguf')
+    os.path.join(os.path.dirname(__file__), '..', 'crispembed', 'e5.gguf')
 )
 
-# Prefijos obligatorios para modelos E5
-PREFIX_QUERY = "query: "
-PREFIX_PASSAGE = "passage: "
+INSTRUCCION_CLASIFICACION = (
+    "query: "
+)
 
 
 class ClasificadorSoporte:
@@ -43,43 +43,45 @@ class ClasificadorSoporte:
         self.precomputar()
 
     def precomputar(self):
-        """Pre-calcula los vectores de las descripciones de los temas."""
-        if self.ruta_vectores_prompt.exists() and not os.environ.get("REFRESH_VECTORS"):
+        """Pre-calcula los vectores de temas o los carga desde el disco."""
+        if self.ruta_vectores_prompt.exists():
             print("Cargando vectores pre-calculados...")
-            with open(self.ruta_vectores_prompt, 'r') as f:
-                datos = json.load(f)
-            self._vectores_temas = {tema: np.array(v) for tema, v in datos.items()}
+            datos = json.loads(self.ruta_vectores_prompt.read_text())
         else:
-            print("Calculando vectores con CrispEmbed (modo passage)...")
-            # Para modelos E5, las referencias deben llevar el prefijo 'passage: '
-            self.modelo.set_prefix(PREFIX_PASSAGE)
+            print("Calculando vectores con CrispEmbed...")
             datos = {}
             for tema, descripciones in self.diccionario_temas.items():
+                # CrispEmbed devuelve un numpy array directamente
                 vectores = self.modelo.encode(descripciones)
                 datos[tema] = vectores.tolist()
+            self.ruta_vectores_prompt.write_text(json.dumps(datos))
 
-            with open(self.ruta_vectores_prompt, 'w') as f:
-                json.dump(datos, f)
-            self._vectores_temas = {tema: np.array(v) for tema, v in datos.items()}
+        self._vectores_temas = {
+            tema: np.array(vectores, dtype=np.float32) for tema, vectores in datos.items()
+        }
 
     def clasificar(self, texto: str, instruccion: str = None, ejemplos: dict = None) -> dict:
-        """Clasifica un ticket usando el modo query de E5."""
-        # Para modelos E5, la consulta debe llevar el prefijo 'query: '
-        prefijo = instruccion if instruccion is not None else "query: "
+        """Clasifica un ticket comparándolo con los temas pre-calculados."""
+        # 1. Configurar el prefijo (Instrucción) para aprovechamiento de contexto
+        # Al usar set_prefix, CrispEmbed puede reutilizar el KV Cache del prefijo
+        prefijo = instruccion if instruccion is not None else INSTRUCCION_CLASIFICACION
         self.modelo.set_prefix(prefijo)
 
+        # 2. Generar vector del ticket (el prefijo se maneja internamente en C++)
         vector_ticket = self.modelo.encode(texto)
 
-        # Determinar vectores de referencia
+        # 3. Determinar vectores de referencia
         if ejemplos:
-            # Si hay ejemplos dinámicos, los tratamos como 'passage'
-            self.modelo.set_prefix("passage: ")
+            # Si hay ejemplos personalizados, los codificamos sin prefijo
+            self.modelo.set_prefix("")
             vectores_referencia_dict = {
-                tema: self.modelo.encode(desc) if isinstance(desc, list) else self.modelo.encode([desc])
-                for tema, desc in ejemplos.items()
+                tema: self.modelo.encode(descripciones)
+                for tema, descripciones in ejemplos.items()
             }
-            self.modelo.set_prefix(prefijo) # Restaurar query
+            # Restaurar el prefijo original
+            self.modelo.set_prefix(prefijo)
         else:
+            # Usar los pre-calculados
             vectores_referencia_dict = self._vectores_temas
 
         # 4. Calcular similitudes
