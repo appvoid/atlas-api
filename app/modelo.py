@@ -5,7 +5,7 @@ import os
 import sys
 
 # Aseguramos que Python encuentre el wrapper de CrispEmbed
-wrapper_path = os.path.join(os.path.dirname(__file__), '..', 'crispembed', 'python')
+wrapper_path = os.path.join(os.path.dirname(__file__), '..', 'CrispEmbed', 'python')
 if wrapper_path not in sys.path:
     sys.path.insert(0, wrapper_path)
 
@@ -19,7 +19,7 @@ except (ImportError, ModuleNotFoundError):
 # Archivo GGUF local
 MODELO_PATH = os.environ.get(
     "CRISPEMBED_MODEL",
-    os.path.join(os.path.dirname(__file__), '..', 'crispembed', 'e5.gguf')
+    os.path.join(os.path.dirname(__file__), '..', 'CrispEmbed', 'e5.gguf')
 )
 
 INSTRUCCION_CLASIFICACION = (

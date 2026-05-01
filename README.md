@@ -33,8 +33,19 @@ Este enfoque es extremadamente rápido y consume muy poca RAM (aprox. 300MB), si
    ```bash
    pip install -r requirements.txt
    ```
+    Luego, instala el backend de CrispEmbed:
 
+    ```bash
+    # Clona con submodulo
+    git clone --recursive https://github.com/CrispStrobe/CrispEmbed
+    cd CrispEmbed # Aquí guardarás el modelo e5.gguf
 
+    # Haz el build (CPU)
+    cmake -S . -B build
+    cmake --build build -j
+    ```
+
+Recuerda guardar el modelo e5.gguf dentro del directorio `CrispEmbed`.
 
 ## Ejecutar la API
 
