@@ -7,7 +7,7 @@ Atlas es una API ultra-ligera y eficiente construida con **Flask** y **CrispEmbe
 
 ## Cómo Funciona
 
-Atlas utiliza **clasificación zero-shot mediante similitud de embeddings** aprovechando el modelo `harrier-270m-q8_0.gguf`:
+Atlas utiliza **clasificación zero-shot mediante similitud de embeddings** aprovechando el modelo `es_q8_0.gguf`:
 
 1. **Al iniciar**, el modelo carga los pesos desde un archivo `.gguf` local y precalcula los embeddings de referencia para un conjunto de descripciones representativas por tema.
 2. **En cada solicitud**, el texto del ticket entrante se codifica en un embedding usando un prompt de instrucción (`Instruct: Retrieve the support ticket category that best matches this message\nQuery: <text>`).
