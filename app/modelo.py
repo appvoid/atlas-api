@@ -1,3 +1,4 @@
+from crispembed import CrispEmbed
 import json
 import numpy as np
 from pathlib import Path
@@ -8,8 +9,6 @@ import sys
 wrapper_path = os.path.join(os.path.dirname(__file__), '..', 'CrispEmbed', 'python')
 if wrapper_path not in sys.path:
     sys.path.insert(0, wrapper_path)
-
-from crispembed import CrispEmbed
 
 try:
     from app.temas import DESCRIPCIONES_TEMAS
