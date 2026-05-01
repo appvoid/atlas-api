@@ -1,6 +1,7 @@
 # Atlas — API Clasificadora de Tickets de Soporte
 
 - Puedes descargar el modelo cuantizado [aquí](https://huggingface.co/appvoid/e5-gguf/blob/main/e5.gguf)
+- Puedes utilizar la App [aquí](https://github.com/appvoid/atlas-ui)
 
 > [!NOTE]
 > **Migración de Arquitectura:** Atlas ha sido migrado de FastAPI + PyTorch a **Flask + CrispEmbed**. Este cambio se realizó para facilitar el despliegue en entornos de prueba (como PythonAnywhere), eliminando dependencias pesadas y reduciendo el consumo de recursos sin perder precisión.
