@@ -3,7 +3,7 @@
 Puedes probar la demo enviando peticiones a appvoid.pythonanywhere.com
 
 > [!NOTE]
-> **Migración de Arquitectura:** Atlas ha sido migrado de FastAPI + PyTorch a **Flask + CrispEmbed**. Este cambio se realizó para facilitar el despliegue en entornos de desarrollo (como PythonAnywhere), eliminando dependencias pesadas y reduciendo el consumo de recursos sin perder precisión.
+> **Migración de Arquitectura:** Atlas ha sido migrado de FastAPI + PyTorch a **Flask + CrispEmbed**. Este cambio se realizó para facilitar el despliegue en entornos de prueba (como PythonAnywhere), eliminando dependencias pesadas y reduciendo el consumo de recursos sin perder precisión.
 
 Atlas es una API ultra-ligera y eficiente construida con **Flask** y **CrispEmbed** que clasifica textos de tickets de soporte en diferentes temas. Utiliza un binario de C++ (CrispEmbed) para manejar modelos de embeddings en formato GGUF, lo que reduce drásticamente el consumo de memoria y elimina la dependencia de PyTorch (~2GB).
 
