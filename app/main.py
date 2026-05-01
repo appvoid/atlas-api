@@ -52,7 +52,12 @@ def clasificar_ticket():
 
 @app.route('/salud', methods=['GET'])
 def revisar_salud():
-    return jsonify({"estado": "ok"}), 200
+    estado_modelo = "cargado" if clasificador.modelo is not None else "no_cargado"
+    return jsonify({
+        "estado": "ok",
+        "modelo": estado_modelo,
+        "hilos": 1
+    }), 200
 
 
 # Para pruebas locales

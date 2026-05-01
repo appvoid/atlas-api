@@ -12,7 +12,8 @@ ENCABEZADOS = {"apiKey": CLAVE_API}
 def test_revisar_salud():
     respuesta = client.get("/salud")
     assert respuesta.status_code == 200
-    assert respuesta.get_json() == {"estado": "ok"}
+    assert respuesta.get_json()["estado"] == "ok"
+    assert "modelo" in respuesta.get_json()
 
 
 def test_clasificar_sin_autorizacion():

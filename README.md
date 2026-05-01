@@ -13,7 +13,7 @@ Atlas utiliza **clasificación zero-shot mediante similitud de embeddings** apro
 2. **En cada solicitud**, el texto del ticket entrante se codifica en un embedding usando el prefijo de consulta (**modo query**): `query: <texto>`.
 3. Se calcula la **similitud del coseno** (producto punto sobre vectores normalizados) entre el embedding del ticket y cada ancla de referencia. El tema con el valor máximo de similitud es el seleccionado.
 
-Este enfoque es extremadamente rápido y consume muy poca RAM (aprox. 300MB), siendo ideal para despliegues en entornos limitados como **PythonAnywhere**.
+Este enfoque es extremadamente rápido y consume muy poca RAM (aprox. 300MB), siendo ideal para despliegues en entornos limitados como **PythonAnywhere**. Se recomienda usar `n_threads=1` en producción para evitar contención de recursos.
 
 ### Temas Soportados
 
@@ -84,7 +84,16 @@ curl -X POST "http://localhost:8000/clasificar" \
 
 ### `GET /salud`
 
-No requiere autenticación. Devuelve el estado de la API.
+No requiere autenticación. Devuelve el estado de la API y el modelo.
+
+**Respuesta ejemplo:**
+```json
+{
+  "estado": "ok",
+  "modelo": "cargado",
+  "hilos": 1
+}
+```
 
 ## Pruebas (Testing)
 

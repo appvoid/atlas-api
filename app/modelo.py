@@ -38,9 +38,17 @@ class ClasificadorSoporte:
         if not Path(MODELO_PATH).exists():
             print(f"ADVERTENCIA: No se encontró el modelo en {MODELO_PATH}")
 
-        # Cargar modelo CrispEmbed
-        self.modelo = CrispEmbed(MODELO_PATH, n_threads=4)
-        self.precomputar()
+        # Cargar modelo CrispEmbed con 1 hilo (optimizado para PythonAnywhere)
+        print(f"Cargando modelo desde: {MODELO_PATH}...")
+        try:
+            self.modelo = CrispEmbed(MODELO_PATH, n_threads=1)
+            print("Modelo cargado exitosamente.")
+        except Exception as e:
+            print(f"ERROR CRÍTICO: No se pudo inicializar CrispEmbed: {e}")
+            self.modelo = None
+
+        if self.modelo:
+            self.precomputar()
 
     def precomputar(self):
         """Pre-calcula los vectores de temas o los carga desde el disco."""
@@ -62,6 +70,9 @@ class ClasificadorSoporte:
 
     def clasificar(self, texto: str, instruccion: str = None, ejemplos: dict = None) -> dict:
         """Clasifica un ticket comparándolo con los temas pre-calculados."""
+        if not self.modelo:
+            return {"tema": "Error", "confianza": 0.0, "detalle": "Modelo no inicializado"}
+
         # 1. Configurar el prefijo (Instrucción) para aprovechamiento de contexto
         # Al usar set_prefix, CrispEmbed puede reutilizar el KV Cache del prefijo
         prefijo = instruccion if instruccion is not None else INSTRUCCION_CLASIFICACION
