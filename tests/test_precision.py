@@ -79,7 +79,7 @@ MUESTRAS = [
     ("Me gustaría sugerir agregar un tema de modo oscuro a la interfaz de usuario", "Solicitud de Funcion"),
     ("¿Hay una hoja de ruta para implementar el desbloqueo biométrico nativo FaceID?", "Solicitud de Funcion"),
     ("Sería increíblemente útil crear una integración directa con Salesforce", "Solicitud de Funcion"),
-    ("Por favor, consideren construir un creador de flujos de trabajo de arrastrar y soltar en la próxima versión", "Solicitud de Funcion"),
+    ("¿Podrían construir un creador de flujos de trabajo de arrastrar y soltar en la próxima versión?", "Solicitud de Funcion"),
     ("Envío una idea: permitir a los usuarios personalizar los widgets de su panel", "Solicitud de Funcion"),
     ("¿Podrían añadir soporte para exportar informes en formato Excel?", "Solicitud de Funcion"),
     ("Sería genial tener una aplicación nativa para macOS", "Solicitud de Funcion"),
@@ -120,9 +120,11 @@ MUESTRAS = [
     ("¿Cómo me suscribo al boletín de noticias de la plataforma?", "Consulta General"),
 ]
 
+
 @pytest.fixture(scope="module")
 def clasificador():
     return ClasificadorSoporte()
+
 
 @pytest.mark.accuracy
 @pytest.mark.parametrize("texto,esperado", MUESTRAS)
@@ -132,6 +134,7 @@ def test_clasificar_muestra(clasificador, texto, esperado):
         f"Esperaba '{esperado}', obtuvo '{resultado['tema']}' "
         f"(confianza={resultado['confianza']:.4f})"
     )
+
 
 def test_precision_general(clasificador):
     conteo = {tema: {"total": 0, "correctos": 0} for tema in set(e for _, e in MUESTRAS)}
@@ -149,7 +152,7 @@ def test_precision_general(clasificador):
         acc = (stat["correctos"] / stat["total"]) * 100
         total_correctos += stat["correctos"]
         print(f"  {tema:<20} {stat['correctos']}/{stat['total']}  ({acc:>5.1f}%)")
-    
+
     print("-" * 60)
     acc_total = (total_correctos / len(MUESTRAS)) * 100
     print(f"  GENERAL               {total_correctos}/{len(MUESTRAS)}  ({acc_total:>5.1f}%)")
