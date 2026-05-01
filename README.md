@@ -1,5 +1,7 @@
 # Atlas — API Clasificadora de Tickets de Soporte
 
+Puedes probar la demo enviando peticiones a appvoid.pythonanywhere.com
+
 > [!NOTE]
 > **Migración de Arquitectura:** Atlas ha sido migrado de FastAPI + PyTorch a **Flask + CrispEmbed**. Este cambio se realizó para facilitar el despliegue en entornos de producción (como PythonAnywhere), eliminando dependencias pesadas y reduciendo el consumo de recursos sin perder precisión.
 
