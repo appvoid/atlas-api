@@ -7,12 +7,21 @@
     "node": ">=22.5.0"
   },
   "scripts": {
-    "start": "node --no-warnings src/server.js",
-    "dev": "node --watch --no-warnings src/server.js",
-    "test": "node --no-warnings --test",
-    "build:crispembed": "node scripts/build-crispembed.js"
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "test": "tsx --test tests/**/*.test.ts",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "build": "tsc --project tsconfig.json",
+    "build:crispembed": "tsx scripts/build-crispembed.ts"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "tsx": "^4.21.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
   }
 }

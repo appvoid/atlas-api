@@ -1,11 +1,13 @@
 # Atlas
 
-API para clasificar y gestionar tickets de soporte usando `Node.js`, `Express`, `SQLite` y `CrispEmbed`.
+API para clasificar y gestionar tickets de soporte usando `Node.js`, `TypeScript`, `Express`, `SQLite`, `Zod` y `CrispEmbed`.
 
 ## Arquitectura
 
 - `Express` expone la API HTTP.
+- `TypeScript` mantiene tipado el flujo entre API, clasificador y persistencia.
 - `SQLite` persiste los tickets clasificados en un archivo local.
+- `Zod` valida los payloads HTTP con menos codigo manual.
 - `CrispEmbed` corre como subproceso local (`crispembed-server`) y Atlas lo usa para generar embeddings.
 - La clasificacion sigue siendo zero-shot por similitud coseno contra anclas tematicas.
 
@@ -32,6 +34,12 @@ npm start
 ```
 
 La API levanta por defecto en `http://0.0.0.0:8000`.
+
+Para desarrollo con recarga automatica:
+
+```bash
+npm run dev
+```
 
 Por defecto, Atlas intenta usar `CrispEmbed/e5.gguf`. Si ese archivo no existe, usa `CrispEmbed/es_q8_0.gguf`. Solo si ninguno de los dos esta presente cae al alias remoto `multilingual-e5-small`.
 
@@ -152,6 +160,12 @@ Elimina un ticket persistido.
 
 ```bash
 npm test
+```
+
+Chequeo de tipos:
+
+```bash
+npm run typecheck
 ```
 
 ## Flujo interno de clasificacion

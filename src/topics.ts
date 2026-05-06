@@ -1,4 +1,6 @@
-const DEFAULT_TOPICS = {
+import type { TopicExamples } from './types';
+
+export const DEFAULT_TOPICS: TopicExamples = {
   Facturacion: [
     'Pagos y Finanzas: cobros, facturas, reembolsos de dinero, precios y suscripciones.',
     'Problemas con cargos de dinero en la tarjeta, Stripe o transferencia bancaria.',
@@ -54,8 +56,4 @@ const DEFAULT_TOPICS = {
     'Politicas de retencion de datos, ubicacion de servidores y vision de la empresa.',
     'Tiempo de respuesta garantizado por el soporte o dudas sobre como empezar.',
   ],
-};
-
-module.exports = {
-  DEFAULT_TOPICS,
 };

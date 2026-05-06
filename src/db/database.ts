@@ -1,8 +1,8 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { DatabaseSync } = require('node:sqlite');
+import fs from 'node:fs';
+import path from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 
-function createDatabase(filePath) {
+export function createDatabase(filePath: string): DatabaseSync {
   if (filePath !== ':memory:') {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
   }
@@ -27,7 +27,3 @@ function createDatabase(filePath) {
 
   return db;
 }
-
-module.exports = {
-  createDatabase,
-};

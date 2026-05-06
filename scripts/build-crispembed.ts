@@ -1,12 +1,12 @@
-const fs = require('node:fs');
-const { spawnSync } = require('node:child_process');
-const path = require('node:path');
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const projectRoot = path.resolve(__dirname, '..');
 const crispEmbedDir = path.join(projectRoot, 'CrispEmbed');
 const buildDir = path.join(crispEmbedDir, 'build');
 
-function run(command, args) {
+function run(command: string, args: string[]): void {
   const result = spawnSync(command, args, {
     cwd: projectRoot,
     stdio: 'inherit',

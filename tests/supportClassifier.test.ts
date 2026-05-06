@@ -1,25 +1,25 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { SupportClassifier } = require('../src/services/supportClassifier');
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import test from 'node:test';
+import { SupportClassifier } from '../src/services/supportClassifier';
+import type { EmbeddingClient, EmbeddingVector } from '../src/types';
 
-class FakeEmbeddingClient {
-  constructor(vectors) {
-    this.vectors = vectors;
-    this.threads = 1;
-    this.modelIdentifier = 'fake-model@memory';
-    this.started = false;
-  }
+class FakeEmbeddingClient implements EmbeddingClient {
+  readonly threads = 1;
+  readonly modelIdentifier = 'fake-model@memory';
+  started = false;
 
-  async start() {
+  constructor(private readonly vectors: Record<string, EmbeddingVector>) {}
+
+  async start(): Promise<void> {
     this.started = true;
   }
 
-  async stop() {}
+  async stop(): Promise<void> {}
 
-  async embed(texts) {
+  async embed(texts: string[]): Promise<EmbeddingVector[]> {
     return texts.map((text) => {
       const vector = this.vectors[text];
       if (!vector) {
@@ -44,7 +44,7 @@ test('SupportClassifier clasifica con el prefijo por defecto y soporta ejemplos 
     ventas: [1, 0],
   });
 
-  const classifier = new SupportClassifier({
+  const classifier = SupportClassifier.create({
     embeddingClient,
     defaultTopics: {
       Facturacion: ['pago', 'factura'],

@@ -1,17 +1,37 @@
-const fs = require('node:fs');
-const path = require('node:path');
+import fs from 'node:fs';
+import path from 'node:path';
+
+export interface CrispEmbedConfig {
+  model: string;
+  threads: number;
+  host: string;
+  port: number;
+  startupTimeoutMs: number;
+  serverUrl: string | null;
+  binaryPath: string;
+}
+
+export interface AtlasConfig {
+  host: string;
+  port: number;
+  apiKey: string;
+  apiKeyHeaderName: string;
+  databasePath: string;
+  promptVectorsPath: string;
+  crispEmbed: CrispEmbedConfig;
+}
 
 const projectRoot = path.resolve(__dirname, '..');
 const crispEmbedBuildDir = path.join(projectRoot, 'CrispEmbed', 'build');
 const localDefaultModelPath = path.join(projectRoot, 'CrispEmbed', 'e5.gguf');
 const legacyLocalModelPath = path.join(projectRoot, 'CrispEmbed', 'es_q8_0.gguf');
 
-function readNumber(value, fallback) {
+function readNumber(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function resolveDefaultModel() {
+function resolveDefaultModel(): string {
   if (fs.existsSync(localDefaultModelPath)) {
     return localDefaultModelPath;
   }
@@ -23,7 +43,7 @@ function resolveDefaultModel() {
   return 'multilingual-e5-small';
 }
 
-module.exports = {
+const config: AtlasConfig = {
   host: process.env.HOST || '0.0.0.0',
   port: readNumber(process.env.PORT, 8000),
   apiKey: process.env.ATLAS_API_KEY || 'sk-atlas-123',
@@ -40,6 +60,11 @@ module.exports = {
     serverUrl: process.env.CRISPEMBED_SERVER_URL || null,
     binaryPath:
       process.env.CRISPEMBED_SERVER_BINARY ||
-      path.join(crispEmbedBuildDir, process.platform === 'win32' ? 'crispembed-server.exe' : 'crispembed-server'),
+      path.join(
+        crispEmbedBuildDir,
+        process.platform === 'win32' ? 'crispembed-server.exe' : 'crispembed-server'
+      ),
   },
 };
+
+export default config;
