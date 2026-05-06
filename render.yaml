@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: atlas-api
+    runtime: node
+    plan: free
+    buildCommand: >
+      npm install &&
+      npm run build:crispembed &&
+      mkdir -p data &&
+      curl -L https://huggingface.co/appvoid/e5-gguf/resolve/main/e5.gguf -o CrispEmbed/e5.gguf
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 24.2.0
+      - key: ATLAS_API_KEY
+        value: sk-atlas-123
+      - key: CRISPEMBED_MODEL
+        value: /opt/render/project/src/CrispEmbed/e5.gguf
+      - key: DATABASE_PATH
+        value: /opt/render/project/src/data/atlas.sqlite
+      - key: PROMPT_VECTORS_PATH
+        value: /opt/render/project/src/data/prompt-vectors.json
