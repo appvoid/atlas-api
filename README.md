@@ -1,130 +1,160 @@
-# Atlas — API Clasificadora de Tickets de Soporte
+# Atlas
 
-- Puedes descargar el modelo cuantizado [aquí](https://huggingface.co/appvoid/e5-gguf/blob/main/e5.gguf)
-- Puedes utilizar la App [aquí](https://github.com/appvoid/atlas-ui)
+API para clasificar y gestionar tickets de soporte usando `Node.js`, `Express`, `SQLite` y `CrispEmbed`.
 
-> [!NOTE]
-> **Migración de Arquitectura:** Atlas ha sido migrado de FastAPI + PyTorch a **Flask + CrispEmbed**. Este cambio se realizó para facilitar el despliegue en entornos de prueba (como PythonAnywhere), eliminando dependencias pesadas y reduciendo el consumo de recursos sin perder precisión.
+## Arquitectura
 
-Atlas es una API ultra-ligera y eficiente construida con **Flask** y **CrispEmbed** que clasifica textos de tickets de soporte en diferentes temas. Utiliza un binario de C++ (CrispEmbed) para manejar modelos de embeddings en formato GGUF, lo que reduce drásticamente el consumo de memoria y elimina la dependencia de PyTorch (~2GB).
+- `Express` expone la API HTTP.
+- `SQLite` persiste los tickets clasificados en un archivo local.
+- `CrispEmbed` corre como subproceso local (`crispembed-server`) y Atlas lo usa para generar embeddings.
+- La clasificacion sigue siendo zero-shot por similitud coseno contra anclas tematicas.
 
-## Cómo Funciona
+## Requisitos
 
-Atlas utiliza **clasificación zero-shot mediante similitud de embeddings** aprovechando el modelo `es_q8_0.gguf` (optimizado para español):
+- `Node.js >= 22.5`
+- `CMake`
+- Toolchain C/C++ para compilar `CrispEmbed`
 
-1. **Al iniciar**, el modelo carga los pesos desde un archivo `.gguf` local y precomputa los embeddings de referencia (**modo passage**) para un conjunto de anclas representativas por tema definidas en `app/temas.py`.
-2. **En cada solicitud**, el texto del ticket entrante se codifica en un embedding usando el prefijo de consulta (**modo query**): `query: <texto>`.
-3. Se calcula la **similitud del coseno** (producto punto sobre vectores normalizados) entre el embedding del ticket y cada ancla de referencia. El tema con el valor máximo de similitud es el seleccionado.
-
-Este enfoque es extremadamente rápido y consume muy poca RAM (aprox. 300MB), siendo ideal para despliegues en entornos limitados como **PythonAnywhere**. Se recomienda usar `n_threads=1` en producción para evitar contención de recursos.
-
-### Temas Soportados
-
-| Tema (Topic) | Descripción / Anclas de Referencia |
-|---|---|
-| Facturacion | Pagos, cobros, reembolsos, facturas, errores bancarios y suscripciones. |
-| Problema Tecnico | Fallos de sistema, errores HTTP, bugs en la app, problemas de UI y webhooks. |
-| Acceso a Cuenta | Login, contraseñas, bloqueos de perfil, MFA/2FA y gestión de usuarios. |
-| Solicitud de Funcion | Sugerencias, nuevas herramientas, integraciones y mejoras de diseño. |
-| Consulta General | Documentación, guías, horarios, legal y dudas generales de inicio. |
-
-## Configuración
-
-1. Instala las dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
-    Luego, instala el backend de CrispEmbed:
-
-    ```bash
-    # Clona con submodulo
-    git clone --recursive https://github.com/CrispStrobe/CrispEmbed
-    cd CrispEmbed # Aquí guardarás el modelo e5.gguf
-
-    # Haz el build (CPU)
-    cmake -S . -B build
-    cmake --build build -j
-    ```
-
-Recuerda guardar el modelo e5.gguf dentro del directorio `CrispEmbed`.
-
-## Ejecutar la API
-
-Desde la raíz del proyecto, puedes usar cualquiera de estos comandos:
-
-**Opción 1: Python directo**
-```bash
-python app/main.py
-```
-
-**Opción 2: Flask CLI**
-```bash
-flask --app app/main.py run --port 8000
-```
-
-La API se ejecutará por defecto en `http://0.0.0.0:8000`.
-
-## Uso
-
-### `POST /clasificar`
-
-Requiere el encabezado `apiKey`. Clave predeterminada: `sk-atlas-123`.
-
-#### Parámetros de la Petición
-
-| Campo | Tipo | Requerido | Descripción |
-|---|---|---|---|
-| `texto` | `string` | Sí | El texto del ticket de soporte a clasificar. |
-| `instruccion` | `string` | No | Una instrucción personalizada que reemplaza el prefijo predeterminado del modelo. |
-| `ejemplos` | `dict` | No | Un diccionario de temas y sus ejemplos (`{"Tema": ["ejemplo1", "ejemplo2"]}`) que reemplaza los temas por defecto. |
-
-#### Ejemplo Básico
+## Instalacion
 
 ```bash
-curl -X POST "http://localhost:8000/clasificar" \
-     -H "apiKey: sk-atlas-123" \
-     -H "Content-Type: application/json" \
-     -d '{"texto": "Mi servidor se bloquea al subir archivos grandes."}'
+npm install
+npm run build:crispembed
 ```
 
-**Respuesta:**
+## Ejecucion
 
-```json
-{
-  "tema": "Problema Tecnico",
-  "confianza": 0.8942
-}
+```bash
+npm start
 ```
+
+La API levanta por defecto en `http://0.0.0.0:8000`.
+
+Por defecto, Atlas intenta usar `CrispEmbed/e5.gguf`. Si ese archivo no existe, usa `CrispEmbed/es_q8_0.gguf`. Solo si ninguno de los dos esta presente cae al alias remoto `multilingual-e5-small`.
+
+## Variables de entorno
+
+| Variable | Default | Descripcion |
+|---|---|---|
+| `PORT` | `8000` | Puerto del API |
+| `HOST` | `0.0.0.0` | Host del API |
+| `ATLAS_API_KEY` | `sk-atlas-123` | API key requerida |
+| `ATLAS_API_KEY_HEADER` | `apiKey` | Nombre del header |
+| `DATABASE_PATH` | `data/atlas.sqlite` | Ruta del archivo SQLite |
+| `PROMPT_VECTORS_PATH` | `data/prompt-vectors.json` | Cache local de embeddings de anclas |
+| `CRISPEMBED_MODEL` | `CrispEmbed/e5.gguf` si existe | Alias de modelo o ruta `.gguf` |
+| `CRISPEMBED_THREADS` | `1` | Hilos para `crispembed-server` |
+| `CRISPEMBED_SERVER_BINARY` | `CrispEmbed/build/crispembed-server` | Binario del servidor de embeddings |
+| `CRISPEMBED_SERVER_URL` | vacío | URL de un `crispembed-server` ya levantado |
+| `CRISPEMBED_PORT` | `8091` | Puerto del subproceso `crispembed-server` |
+
+## Endpoints
 
 ### `GET /salud`
 
-No requiere autenticación. Devuelve el estado de la API y el modelo.
+No requiere autenticacion.
 
-**Respuesta ejemplo:**
+Respuesta ejemplo:
+
 ```json
 {
   "estado": "ok",
   "modelo": "cargado",
-  "hilos": 1
+  "hilos": 1,
+  "baseDatos": "ok"
 }
 ```
 
-## Pruebas (Testing)
+Durante el primer arranque puede responder temporalmente con `"modelo": "cargando"` mientras `CrispEmbed` descarga o carga el modelo.
 
-### Pruebas unitarias rápidas (no requiere el modelo)
+### `POST /clasificar`
 
-```bash
-pytest tests/test_principal.py tests/test_parametros.py -v
+Clasifica un ticket sin persistirlo.
+
+Si el modelo todavia se esta inicializando, responde `503` en lugar de dejar la conexion colgada.
+
+Headers:
+
+```http
+apiKey: sk-atlas-123
+Content-Type: application/json
 ```
 
-### Benchmarks de Precisión (requiere el modelo y CrispEmbed funcional)
+Body:
 
-```bash
-pytest tests/test_precision.py -v -s
+```json
+{
+  "texto": "Me cobraron dos veces este mes",
+  "instruccion": "query: ",
+  "ejemplos": {
+    "Facturacion": ["cargo duplicado", "problema con factura"]
+  }
+}
 ```
 
-## Linting
+Respuesta:
+
+```json
+{
+  "tema": "Facturacion",
+  "confianza": 0.95
+}
+```
+
+### `POST /tickets`
+
+Clasifica y persiste un ticket.
+
+Igual que `POST /clasificar`, responde `503` si el modelo aun no termino de cargar.
 
 ```bash
-flake8 app/ tests/
+curl -X POST http://localhost:8000/tickets \
+  -H "apiKey: sk-atlas-123" \
+  -H "Content-Type: application/json" \
+  -d '{"texto":"No puedo hacer login"}'
 ```
+
+Respuesta ejemplo:
+
+```json
+{
+  "id": 1,
+  "texto": "No puedo hacer login",
+  "tema": "Acceso a Cuenta",
+  "confianza": 0.91,
+  "instruccion": null,
+  "ejemplos": null,
+  "createdAt": "2026-05-06T18:00:00.000Z",
+  "updatedAt": "2026-05-06T18:00:00.000Z"
+}
+```
+
+### `GET /tickets`
+
+Lista todos los tickets persistidos.
+
+### `GET /tickets/:id`
+
+Obtiene un ticket por id.
+
+### `PUT /tickets/:id`
+
+Actualiza un ticket y lo reclasifica con el nuevo contenido. Puedes enviar `texto`, `instruccion`, `ejemplos` o cualquier combinacion de esos campos.
+
+### `DELETE /tickets/:id`
+
+Elimina un ticket persistido.
+
+## Pruebas
+
+```bash
+npm test
+```
+
+## Flujo interno de clasificacion
+
+1. Atlas inicia `crispembed-server` con el modelo configurado.
+2. Se calculan o reutilizan los embeddings cacheados de los temas base.
+3. Cada ticket se embebe con el prefijo `query: ` o la `instruccion` enviada.
+4. Se escoge el tema con mayor similitud coseno.
+5. Si la llamada fue a `POST /tickets` o `PUT /tickets/:id`, el resultado se guarda en SQLite.
