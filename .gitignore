@@ -6,7 +6,7 @@ __pycache__/
 *.pyo
 .DS_Store
 flake8.log
-# notes.md
+notes.md
 crispembed/
 node_modules/
 data/
