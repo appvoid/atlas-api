@@ -14,6 +14,7 @@ API para clasificar y gestionar tickets de soporte usando `Node.js`, `Express`, 
 - `Node.js >= 22.5`
 - `CMake`
 - Toolchain C/C++ para compilar `CrispEmbed`
+- Modelo gguf como CrispEmbed/e5.gguf ([descarga aquí](https://huggingface.co/appvoid/e5-gguf/tree/main))
 
 ## Instalacion
 
