@@ -1,3 +1,4 @@
+const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 
@@ -14,6 +15,10 @@ function run(command, args) {
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }
+}
+
+if (!fs.existsSync(crispEmbedDir)) {
+  run('git', ['clone', '--recursive', 'https://github.com/CrispStrobe/CrispEmbed.git', crispEmbedDir]);
 }
 
 run('cmake', ['-S', crispEmbedDir, '-B', buildDir, '-DCRISPEMBED_BUILD_SHARED=ON']);

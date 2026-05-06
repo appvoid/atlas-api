@@ -23,6 +23,8 @@ npm install
 npm run build:crispembed
 ```
 
+Si `CrispEmbed/` no existe, `npm run build:crispembed` lo clona automaticamente antes de compilar.
+
 ## Ejecucion
 
 ```bash
