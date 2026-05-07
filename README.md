@@ -9,6 +9,15 @@ API para clasificar y gestionar tickets de soporte usando JavaScript, Express, S
 - `POST /tickets` clasifica y guarda un ticket.
 - `GET /tickets`, `GET /tickets/:id`, `PUT /tickets/:id` y `DELETE /tickets/:id` administran los tickets guardados.
 
+## Ejemplo basico
+
+```bash
+curl -X POST localhost:8000/clasificar \
+  -H "apiKey: sk-atlas-123" \
+  -H "Content-Type: application/json" \
+  -d '{"texto":"No puedo entrar a mi cuenta"}'
+```
+
 ## Como esta armado
 
 - `Express` expone la API HTTP.
