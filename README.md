@@ -1,6 +1,6 @@
 # Atlas
 
-<img src="https://github.com/appvoid/atlas-api/blob/main/atlas.png?raw=true"/>
+<img src="https://raw.githubusercontent.com/appvoid/atlas-api/refs/heads/main/atlas.png"/>
 
 API para clasificar y gestionar tickets de soporte usando JavaScript, Express, SQLite, Valibot y CrispEmbed.
 
@@ -37,7 +37,7 @@ curl -X POST localhost:8000/clasificar \
 
 ## Flujo de clasificacion
 
-<img src="https://github.com/appvoid/atlas-api/blob/main/flujo.png?raw=true"/>
+<img src="https://raw.githubusercontent.com/appvoid/atlas-api/refs/heads/main/flujo.png"/>
 
 ## Instalacion
 
