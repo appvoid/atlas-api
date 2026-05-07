@@ -6,10 +6,10 @@ __pycache__/
 *.pyo
 .DS_Store
 flake8.log
-notes.md
 crispembed/
 node_modules/
 data/
 vectores_prompt.json
 dist/
 *.tsbuildinfo
+notes.md

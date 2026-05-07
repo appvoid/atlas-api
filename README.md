@@ -1,22 +1,62 @@
 # Atlas
 
-API para clasificar y gestionar tickets de soporte usando `Node.js`, `TypeScript`, `Express`, `SQLite`, `Zod` y `CrispEmbed`.
+API para clasificar y gestionar tickets de soporte usando JavaScript, Express, SQLite, Valibot y CrispEmbed.
 
-## Arquitectura
+## Que hace
+
+- `GET /salud` muestra si la API esta viva y si el clasificador ya esta listo.
+- `POST /clasificar` recibe un ticket, lo clasifica y devuelve `tema` + `confianza`.
+- `POST /tickets` clasifica y guarda un ticket.
+- `GET /tickets`, `GET /tickets/:id`, `PUT /tickets/:id` y `DELETE /tickets/:id` administran los tickets guardados.
+
+## Como esta armado
 
 - `Express` expone la API HTTP.
-- `TypeScript` mantiene tipado el flujo entre API, clasificador y persistencia.
-- `SQLite` persiste los tickets clasificados en un archivo local.
-- `Zod` valida los payloads HTTP con menos codigo manual.
-- `CrispEmbed` corre como subproceso local (`crispembed-server`) y Atlas lo usa para generar embeddings.
-- La clasificacion sigue siendo zero-shot por similitud coseno contra anclas tematicas.
+- `better-sqlite3` guarda los tickets en SQLite con una API simple y sincronica.
+- `Valibot` valida los cuerpos JSON sin llenar las rutas de `if` repetidos.
+- `CrispEmbed` genera embeddings para comparar el texto del ticket contra ejemplos por tema.
+- Un router CRUD generico crea casi todas las rutas de recursos a partir de una sola configuracion.
+
+## Estructura principal
+
+```txt
+src/
+  app.js
+  baseDeDatos.js
+  configuracion.js
+  servidor.js
+  temas.js
+
+  middlewares/
+    apiKey.js
+    clasificadorListo.js
+
+  nucleo/
+    almacenCrud.js
+    crud.js
+    errores.js
+    sql.js
+    validar.js
+
+  modulos/
+    tickets/
+      esquemas.js
+      index.js
+      transformaciones.js
+
+  servicios/
+    cacheVectoresPrompt.js
+    clasificadorSoporte.js
+    clienteProcesoCrispEmbed.js
+    vectorizacion.js
+```
 
 ## Requisitos
 
 - `Node.js >= 22.5`
 - `CMake`
 - Toolchain C/C++ para compilar `CrispEmbed`
-- Modelo gguf como CrispEmbed/e5.gguf ([descarga aquí](https://huggingface.co/appvoid/e5-gguf/tree/main))
+- Un modelo `.gguf`, por ejemplo `CrispEmbed/e5.gguf`
 
 ## Instalacion
 
@@ -25,7 +65,7 @@ npm install
 npm run build:crispembed
 ```
 
-Si `CrispEmbed/` no existe, `npm run build:crispembed` lo clona automaticamente antes de compilar.
+Si `CrispEmbed/` no existe, el script de build lo clona antes de compilar.
 
 ## Ejecucion
 
@@ -33,15 +73,17 @@ Si `CrispEmbed/` no existe, `npm run build:crispembed` lo clona automaticamente 
 npm start
 ```
 
-La API levanta por defecto en `http://0.0.0.0:8000`.
-
 Para desarrollo con recarga automatica:
 
 ```bash
 npm run dev
 ```
 
-Por defecto, Atlas intenta usar `CrispEmbed/e5.gguf`. Si ese archivo no existe, usa `CrispEmbed/es_q8_0.gguf`. Solo si ninguno de los dos esta presente cae al alias remoto `multilingual-e5-small`.
+## Pruebas
+
+```bash
+npm test
+```
 
 ## Variables de entorno
 
@@ -52,126 +94,17 @@ Por defecto, Atlas intenta usar `CrispEmbed/e5.gguf`. Si ese archivo no existe, 
 | `ATLAS_API_KEY` | `sk-atlas-123` | API key requerida |
 | `ATLAS_API_KEY_HEADER` | `apiKey` | Nombre del header |
 | `DATABASE_PATH` | `data/atlas.sqlite` | Ruta del archivo SQLite |
-| `PROMPT_VECTORS_PATH` | `data/prompt-vectors.json` | Cache local de embeddings de anclas |
-| `CRISPEMBED_MODEL` | `CrispEmbed/e5.gguf` si existe | Alias de modelo o ruta `.gguf` |
+| `PROMPT_VECTORS_PATH` | `data/prompt-vectors.json` | Cache local de vectores de temas |
+| `CRISPEMBED_MODEL` | `CrispEmbed/e5.gguf` si existe | Modelo o alias de modelo |
 | `CRISPEMBED_THREADS` | `1` | Hilos para `crispembed-server` |
-| `CRISPEMBED_SERVER_BINARY` | `CrispEmbed/build/crispembed-server` | Binario del servidor de embeddings |
-| `CRISPEMBED_SERVER_URL` | vacío | URL de un `crispembed-server` ya levantado |
-| `CRISPEMBED_PORT` | `8091` | Puerto del subproceso `crispembed-server` |
+| `CRISPEMBED_SERVER_BINARY` | `CrispEmbed/build/crispembed-server` | Binario del servidor |
+| `CRISPEMBED_SERVER_URL` | vacio | URL de un servidor ya levantado |
+| `CRISPEMBED_PORT` | `8091` | Puerto local de CrispEmbed |
 
-## Endpoints
+## Flujo de clasificacion
 
-### `GET /salud`
-
-No requiere autenticacion.
-
-Respuesta ejemplo:
-
-```json
-{
-  "estado": "ok",
-  "modelo": "cargado",
-  "hilos": 1,
-  "baseDatos": "ok"
-}
-```
-
-Durante el primer arranque puede responder temporalmente con `"modelo": "cargando"` mientras `CrispEmbed` descarga o carga el modelo.
-
-### `POST /clasificar`
-
-Clasifica un ticket sin persistirlo.
-
-Si el modelo todavia se esta inicializando, responde `503` en lugar de dejar la conexion colgada.
-
-Headers:
-
-```http
-apiKey: sk-atlas-123
-Content-Type: application/json
-```
-
-Body:
-
-```json
-{
-  "texto": "Me cobraron dos veces este mes",
-  "instruccion": "query: ",
-  "ejemplos": {
-    "Facturacion": ["cargo duplicado", "problema con factura"]
-  }
-}
-```
-
-Respuesta:
-
-```json
-{
-  "tema": "Facturacion",
-  "confianza": 0.95
-}
-```
-
-### `POST /tickets`
-
-Clasifica y persiste un ticket.
-
-Igual que `POST /clasificar`, responde `503` si el modelo aun no termino de cargar.
-
-```bash
-curl -X POST http://localhost:8000/tickets \
-  -H "apiKey: sk-atlas-123" \
-  -H "Content-Type: application/json" \
-  -d '{"texto":"No puedo hacer login"}'
-```
-
-Respuesta ejemplo:
-
-```json
-{
-  "id": 1,
-  "texto": "No puedo hacer login",
-  "tema": "Acceso a Cuenta",
-  "confianza": 0.91,
-  "instruccion": null,
-  "ejemplos": null,
-  "createdAt": "2026-05-06T18:00:00.000Z",
-  "updatedAt": "2026-05-06T18:00:00.000Z"
-}
-```
-
-### `GET /tickets`
-
-Lista todos los tickets persistidos.
-
-### `GET /tickets/:id`
-
-Obtiene un ticket por id.
-
-### `PUT /tickets/:id`
-
-Actualiza un ticket y lo reclasifica con el nuevo contenido. Puedes enviar `texto`, `instruccion`, `ejemplos` o cualquier combinacion de esos campos.
-
-### `DELETE /tickets/:id`
-
-Elimina un ticket persistido.
-
-## Pruebas
-
-```bash
-npm test
-```
-
-Chequeo de tipos:
-
-```bash
-npm run typecheck
-```
-
-## Flujo interno de clasificacion
-
-1. Atlas inicia `crispembed-server` con el modelo configurado.
-2. Se calculan o reutilizan los embeddings cacheados de los temas base.
-3. Cada ticket se embebe con el prefijo `query: ` o la `instruccion` enviada.
-4. Se escoge el tema con mayor similitud coseno.
-5. Si la llamada fue a `POST /tickets` o `PUT /tickets/:id`, el resultado se guarda en SQLite.
+1. Atlas prepara o reutiliza un servidor de embeddings.
+2. Carga ejemplos base por tema desde `src/temas.js`.
+3. Convierte cada ejemplo y cada ticket en vectores numericos.
+4. Busca el tema cuyo ejemplo quede mas cerca del ticket.
+5. Si la ruta era `/tickets`, ademas guarda el resultado en SQLite.
