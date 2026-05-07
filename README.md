@@ -35,6 +35,10 @@ curl -X POST localhost:8000/clasificar \
 - Toolchain C/C++ para compilar `CrispEmbed`
 - Un modelo `.gguf`, por ejemplo `CrispEmbed/e5.gguf`
 
+## Flujo de clasificacion
+
+<img src="https://github.com/appvoid/atlas-api/blob/main/flujo.png?raw=true"/>
+
 ## Instalacion
 
 ```bash
@@ -59,27 +63,3 @@ npm run dev
 ```bash
 npm test
 ```
-
-## Variables de entorno
-
-| Variable | Default | Descripcion |
-|---|---|---|
-| `PORT` | `8000` | Puerto del API |
-| `HOST` | `0.0.0.0` | Host del API |
-| `ATLAS_API_KEY` | `sk-atlas-123` | API key requerida |
-| `ATLAS_API_KEY_HEADER` | `apiKey` | Nombre del header |
-| `DATABASE_PATH` | `data/atlas.sqlite` | Ruta del archivo SQLite |
-| `PROMPT_VECTORS_PATH` | `data/prompt-vectors.json` | Cache local de vectores de temas |
-| `CRISPEMBED_MODEL` | `CrispEmbed/e5.gguf` si existe | Modelo o alias de modelo |
-| `CRISPEMBED_THREADS` | `1` | Hilos para `crispembed-server` |
-| `CRISPEMBED_SERVER_BINARY` | `CrispEmbed/build/crispembed-server` | Binario del servidor |
-| `CRISPEMBED_SERVER_URL` | vacio | URL de un servidor ya levantado |
-| `CRISPEMBED_PORT` | `8091` | Puerto local de CrispEmbed |
-
-## Flujo de clasificacion
-
-1. Atlas prepara o reutiliza un servidor de embeddings.
-2. Carga ejemplos base por tema desde `src/temas.js`.
-3. Convierte cada ejemplo y cada ticket en vectores numericos.
-4. Busca el tema cuyo ejemplo quede mas cerca del ticket.
-5. Si la ruta era `/tickets`, ademas guarda el resultado en SQLite.
