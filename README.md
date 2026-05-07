@@ -35,9 +35,11 @@ curl -X POST localhost:8000/clasificar \
 - Toolchain C/C++ para compilar `CrispEmbed`
 - Un modelo `.gguf`, por ejemplo `CrispEmbed/e5.gguf`
 
-## Flujo de clasificacion
+## Esquema general
 
 <img src="https://raw.githubusercontent.com/appvoid/atlas-api/refs/heads/main/flujo.png"/>
+
+---
 
 ## Instalacion
 
