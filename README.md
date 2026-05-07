@@ -1,5 +1,7 @@
 # Atlas
 
+<img src="https://github.com/appvoid/atlas-api/blob/main/atlas.png?raw=true"/>
+
 API para clasificar y gestionar tickets de soporte usando JavaScript, Express, SQLite, Valibot y CrispEmbed.
 
 ## Que hace
@@ -26,40 +28,6 @@ curl -X POST localhost:8000/clasificar \
 - `CrispEmbed` genera embeddings para comparar el texto del ticket contra ejemplos por tema.
 - Un router CRUD generico crea casi todas las rutas de recursos a partir de una sola configuracion.
 
-## Estructura principal
-
-```txt
-src/
-  app.js
-  baseDeDatos.js
-  configuracion.js
-  servidor.js
-  temas.js
-
-  middlewares/
-    apiKey.js
-    clasificadorListo.js
-
-  nucleo/
-    almacenCrud.js
-    crud.js
-    errores.js
-    sql.js
-    validar.js
-
-  modulos/
-    tickets/
-      esquemas.js
-      index.js
-      transformaciones.js
-
-  servicios/
-    cacheVectoresPrompt.js
-    clasificadorSoporte.js
-    clienteProcesoCrispEmbed.js
-    vectorizacion.js
-```
-
 ## Requisitos
 
 - `Node.js >= 22.5`
@@ -73,8 +41,6 @@ src/
 npm install
 npm run build:crispembed
 ```
-
-Si `CrispEmbed/` no existe, el script de build lo clona antes de compilar.
 
 ## Ejecucion
 
